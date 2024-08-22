@@ -265,7 +265,8 @@ class Datagen(metaclass=RetryMeta):
         """
         url_ixp = url.replace("https://", "")
         url = f"{url}/api/v1/routeservers"
-        async with aiohttp.ClientSession(timeout=600) as session:
+        timeout = aiohttp.ClientTimeout(total=600)
+        async with aiohttp.ClientSession(timeout) as session:
             async with session.get(url) as response:
                 if response.status == 200:
                     rs_dict = {}
