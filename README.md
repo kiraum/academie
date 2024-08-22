@@ -4,7 +4,7 @@ TDB
 
 ### archive
 
-Old code, just adding it here for historical reasons, the code doesn't work anymore and it's not planned to be fixed.
+Old code, just adding it here for historical reasons, the code doesn't work anymore (data sources missing) and it's not planned to be fixed.
 
 This script performs various data collection and processing tasks related to internet exchange points (IXPs) and autonomous systems (ASNs)
 
