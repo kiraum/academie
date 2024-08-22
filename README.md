@@ -1,6 +1,16 @@
 # academie
 
-TDB
+````
+» python3 datagen.py
+usage: datagen.py [-h] [-lg ALICE_URL] [-a]
+
+Datagen - Generate Origin ASN summary per country.
+
+options:
+  -h, --help     show this help message and exit
+  -lg ALICE_URL  Datagen - Generate Origin ASN summary per country.
+  -a             Generate Origin ASN summary per country.for all IXPS @ datagen/config.yaml.
+````
 
 ### archive
 
