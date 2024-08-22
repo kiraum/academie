@@ -330,10 +330,17 @@ class Datagen(metaclass=RetryMeta):
             - Prints progress and error messages to console.
             - Introduces a 1-second delay between processing each neighbor.
         """
+        if neighbours is None:
+            print(
+                f"WARNING: No neighbours found for route server {route_server}. Skipping."
+            )
+            return None
+
         origin_asn_list = []
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=60)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             for neighbour_id in neighbours:
-                await asyncio.sleep(1)  # Non-blocking sleep
+                await asyncio.sleep(1)
                 print(f"Getting routes for {route_server} - {neighbour_id}")
                 url = f"{base_url}/api/v1/routeservers/{route_server}/neighbors/{neighbour_id}/routes"
 
