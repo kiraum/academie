@@ -337,7 +337,7 @@ class Datagen(metaclass=RetryMeta):
             return None
 
         origin_asn_list = []
-        timeout = aiohttp.ClientTimeout(total=60)
+        timeout = aiohttp.ClientTimeout(total=600)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             for neighbour_id in neighbours:
                 await asyncio.sleep(1)
