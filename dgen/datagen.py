@@ -450,7 +450,7 @@ class Datagen(metaclass=RetryMeta):
         Returns:
             dict: Dictionary containing the YAML config data.
         """
-        with open("pgossip/config.yaml", "r", encoding="utf8") as file:
+        with open("dgen/config.yaml", "r", encoding="utf8") as file:
             data = yaml.load(file, Loader=yaml.FullLoader)
         return data
 
