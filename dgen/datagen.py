@@ -17,7 +17,7 @@ class RetryMeta(type):
 
     This metaclass enhances methods to retry up to 5 times upon `requests.exceptions.RequestException`,
     using an exponential backoff strategy. It automatically decorates all methods that are not special
-    methods (not starting with '__').
+    methods (not starting with '__') and adds logging for retry attempts.
 
     Attributes:
         name (str): The name of the class.
@@ -29,13 +29,39 @@ class RetryMeta(type):
     """
 
     def __new__(mcs, name, bases, dct):
+        """
+        Create a new class with retry logic applied to its methods.
+
+        Args:
+            mcs (type): The metaclass itself.
+            name (str): The name of the class being created.
+            bases (tuple): The base classes of the class being created.
+            dct (dict): The namespace of the class being created.
+
+        Returns:
+            type: A new class with retry logic applied to its methods.
+        """
         for key, value in dct.items():
             if callable(value) and not key.startswith("__"):
                 dct[key] = backoff.on_exception(
-                    backoff.expo, requests.exceptions.RequestException, max_tries=5
+                    backoff.expo,
+                    requests.exceptions.RequestException,
+                    max_tries=5,
+                    on_backoff=RetryMeta.log_backoff
                 )(value)
         return type.__new__(mcs, name, bases, dct)
 
+    @staticmethod
+    def log_backoff(details):
+        """
+        Log information about each retry attempt.
+
+        Args:
+            details (dict): A dictionary containing details about the retry attempt.
+
+        This method logs the wait time, number of tries, and the exception that triggered the retry.
+        """
+        logging.warning(f"Backing off {details['wait']:0.1f} seconds after {details['tries']} tries. Exception: {details['exception']}")
 
 class Datagen(metaclass=RetryMeta):
     """
@@ -177,6 +203,7 @@ class Datagen(metaclass=RetryMeta):
         This method fetches ASN details from CAIDA and RIPE databases, handling special cases
         like private ASNs. It formats the information into a single string for reporting.
         """
+        print(f"Getting ASN details for {group} - {asn}")
         if asn != 64567:  # AMS-IX using private ASN
             details = await self.caida_asn_whois(asn)
             asn_name = await self.ripe_asn_name(asn)
