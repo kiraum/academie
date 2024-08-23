@@ -161,7 +161,7 @@ class Datagen(metaclass=RetryMeta):
         if origin_asns is None:
             return
 
-        await asyncio.sleep(60)  # Non-blocking sleep
+        await asyncio.sleep(60)
 
     async def get_asn_details(self, asn, group):
         """
@@ -180,7 +180,7 @@ class Datagen(metaclass=RetryMeta):
         if asn != 64567:  # AMS-IX using private ASN
             details = await self.caida_asn_whois(asn)
             asn_name = await self.ripe_asn_name(asn)
-            await asyncio.sleep(0.5)  # Non-blocking sleep
+            await asyncio.sleep(0.5)
         else:
             asn_name = "AMS-IX"
             details = {
@@ -340,7 +340,7 @@ class Datagen(metaclass=RetryMeta):
         timeout = aiohttp.ClientTimeout(total=600)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             for neighbour_id in neighbours:
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.5)
                 print(f"Getting routes for {route_server} - {neighbour_id}")
                 url = f"{base_url}/api/v1/routeservers/{route_server}/neighbors/{neighbour_id}/routes"
 
@@ -371,10 +371,6 @@ class Datagen(metaclass=RetryMeta):
 
         Returns:
             dict: WHOIS information if the request is successful, None otherwise.
-
-        Raises:
-            KeyError: If expected data keys are missing in the response.
-            SystemExit: If the API response is not successful (non-200 status code).
         """
         url = f"https://api.asrank.caida.org/v2/restful/asns/{asn}"
         result = None
@@ -386,13 +382,11 @@ class Datagen(metaclass=RetryMeta):
                 result = data["data"]["asn"]
             except KeyError:
                 print(f"ASN {asn} has no data at whois!")
-                raise
         else:
             print(
                 "ERROR | HTTP status != 200 - caida_asn_whois"
                 f" - Error {response.status_code}: {asn}"
             )
-            sys.exit(1)
         return result
 
     async def ripe_asn_name(self, asn):
@@ -404,10 +398,6 @@ class Datagen(metaclass=RetryMeta):
 
         Returns:
             str or None: The holder name of the ASN if available, otherwise None.
-
-        Raises:
-            KeyError: If the ASN data is missing in the API response.
-            SystemExit: If the API response status is not 200.
         """
         url = f"https://stat.ripe.net/data/as-overview/data.json?resource={asn}"
         result = None
@@ -418,13 +408,11 @@ class Datagen(metaclass=RetryMeta):
                 result = response.json()["data"]["holder"]
             except KeyError:
                 print(f"ASN {asn} has no data at whois!")
-                raise
         else:
             print(
                 "ERROR | HTTP status != 200 - ripe_asn_name"
                 f" - Error {response.status_code}: {asn}"
             )
-            sys.exit(1)
         return result
 
     async def create_report(self, data):
