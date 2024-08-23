@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 import os
 import sys
 
@@ -47,7 +48,7 @@ class RetryMeta(type):
                     backoff.expo,
                     requests.exceptions.RequestException,
                     max_tries=5,
-                    on_backoff=RetryMeta.log_backoff
+                    on_backoff=RetryMeta.log_backoff,
                 )(value)
         return type.__new__(mcs, name, bases, dct)
 
@@ -61,7 +62,10 @@ class RetryMeta(type):
 
         This method logs the wait time, number of tries, and the exception that triggered the retry.
         """
-        logging.warning(f"Backing off {details['wait']:0.1f} seconds after {details['tries']} tries. Exception: {details['exception']}")
+        logging.warning(
+            f"Backing off {details['wait']:0.1f} seconds after {details['tries']} tries. Exception: {details['exception']}"
+        )
+
 
 class Datagen(metaclass=RetryMeta):
     """
