@@ -373,7 +373,7 @@ class Datagen(metaclass=RetryMeta):
             for neighbour_id in neighbours:
                 await asyncio.sleep(0.5)
                 print(f"Getting routes for {route_server} - {neighbour_id}")
-                url = f"{base_url}/api/v1/routeservers/{route_server}/neighbors/{neighbour_id}/routes"
+                url = f"{base_url}/api/v1/routeservers/{route_server}/neighbors/{neighbour_id}/routes/received"
 
                 try:
                     async with session.get(url) as response:
