@@ -146,12 +146,12 @@ class Datagen(metaclass=RetryMeta):
         for detail in asn_details:
             text.append(detail)
 
+        await self.write_report_to_file(fname, "\n".join(map(str, text)), as_json=False)
+        await self.write_report_to_file(fname, "\n".join(map(str, text)), as_json=True)
         print("\n".join(map(str, text)))
         report_link = await self.create_report("\n".join(map(str, text)))
         print("=" * 80)
         print(f"We created a sharable report link, enjoy => {report_link}")
-        await self.write_report_to_file(fname, "\n".join(map(str, text)), as_json=False)
-        await self.write_report_to_file(fname, "\n".join(map(str, text)), as_json=True)
 
     async def process_route_server(self, url, route_server, group, origin_asns):
         """
