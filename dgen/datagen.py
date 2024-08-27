@@ -371,7 +371,7 @@ class Datagen(metaclass=RetryMeta):
         timeout = aiohttp.ClientTimeout(total=600)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             for neighbour_id in neighbours:
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(5)
                 print(f"Getting routes for {route_server} - {neighbour_id}")
                 url = f"{base_url}/api/v1/routeservers/{route_server}/neighbors/{neighbour_id}/routes/received"
 
@@ -379,8 +379,9 @@ class Datagen(metaclass=RetryMeta):
                     async with session.get(url) as response:
                         if response.status == 200:
                             data = await response.json()
-                            for route in data["imported"] + data["filtered"]:
-                                origin_asn_list.append(route["bgp"]["as_path"][-1])
+                            if data["imported"]:
+                                for route in data["imported"]:
+                                    origin_asn_list.append(route["bgp"]["as_path"][-1])
                         else:
                             print(
                                 f"ERROR | HTTP status {response.status} - alice_routes: {url} - {route_server} - {neighbour_id}"
