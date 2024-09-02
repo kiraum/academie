@@ -47,7 +47,7 @@ class RetryMeta(type):
                 dct[key] = backoff.on_exception(
                     backoff.expo,
                     requests.exceptions.RequestException,
-                    max_tries=5,
+                    max_tries=float("inf"),
                     on_backoff=RetryMeta.log_backoff,
                 )(value)
         return type.__new__(mcs, name, bases, dct)
@@ -63,7 +63,10 @@ class RetryMeta(type):
         This method logs the wait time, number of tries, and the exception that triggered the retry.
         """
         logging.warning(
-            f"Backing off {details['wait']:0.1f} seconds after {details['tries']} tries. Exception: {details['exception']}"
+            "Backing off %.1f seconds after %d tries. Exception: %s",
+            details["wait"],
+            details["tries"],
+            details["exception"],
         )
 
 
@@ -281,6 +284,12 @@ class Datagen(metaclass=RetryMeta):
             else:
                 tfile.write(data)
 
+    @backoff.on_exception(
+        backoff.expo,
+        (aiohttp.ClientError, aiohttp.ClientResponseError, asyncio.TimeoutError),
+        max_tries=float("inf"),
+        max_time=600,
+    )
     async def alice_rs(self, url):
         """
         Fetch route server information for a given IXP URL.
@@ -309,6 +318,12 @@ class Datagen(metaclass=RetryMeta):
                     sys.exit(1)
         return rs_dict
 
+    @backoff.on_exception(
+        backoff.expo,
+        (aiohttp.ClientError, aiohttp.ClientResponseError, asyncio.TimeoutError),
+        max_tries=float("inf"),
+        max_time=600,
+    )
     async def alice_neighbours(self, url, route_server):
         """
         Get neighbor information for a specific route server.
@@ -345,9 +360,35 @@ class Datagen(metaclass=RetryMeta):
                 neighbour_list = None
         return neighbour_list
 
+    @backoff.on_exception(
+        backoff.expo,
+        (aiohttp.ClientError, aiohttp.ClientResponseError, asyncio.TimeoutError),
+        max_tries=float("inf"),
+        max_time=600,
+    )
+    async def fetch_routes(self, session, url):
+        """
+        Fetch and extract routes from a given URL.
+
+        Args:
+            session: The aiohttp ClientSession object.
+            url (str): The URL to fetch routes from.
+            route_server (str): The route server identifier.
+            neighbour_id (str): The neighbor identifier.
+
+        Returns:
+            list: A list of origin ASNs from imported routes.
+        """
+        async with session.get(url) as response:
+            response.raise_for_status()
+            data = await response.json()
+            if data["imported"]:
+                return [route["bgp"]["as_path"][-1] for route in data["imported"]]
+        return []
+
     async def alice_routes(self, base_url, route_server, neighbours):
         """
-        Retrieve routes for a specific route server and its neighbors.
+        Retrieve and process routes for a specific route server and its neighbors.
 
         Args:
             base_url (str): The base URL of the IXP.
@@ -355,11 +396,7 @@ class Datagen(metaclass=RetryMeta):
             neighbours (list): A list of neighbor IDs.
 
         Returns:
-            list or None: A list of unique origin ASNs if successful, None if there's an error.
-
-        Side effects:
-            - Prints progress and error messages to console.
-            - Introduces a 1-second delay between processing each neighbor.
+            list or None: A list of unique origin ASNs if successful, None otherwise.
         """
         if neighbours is None:
             print(
@@ -376,21 +413,12 @@ class Datagen(metaclass=RetryMeta):
                 url = f"{base_url}/api/v1/routeservers/{route_server}/neighbors/{neighbour_id}/routes/received"
 
                 try:
-                    async with session.get(url) as response:
-                        if response.status == 200:
-                            data = await response.json()
-                            if data["imported"]:
-                                for route in data["imported"]:
-                                    origin_asn_list.append(route["bgp"]["as_path"][-1])
-                        else:
-                            print(
-                                f"ERROR | HTTP status {response.status} - alice_routes: {url} - {route_server} - {neighbour_id}"
-                            )
-                            if response.status == 500:
-                                return None
-                except aiohttp.ClientError as e:
-                    print(f"Error fetching routes: {e}")
-                    return None
+                    routes = await self.fetch_routes(session, url)
+                    origin_asn_list.extend(routes)
+                except Exception as exc:  # pylint: disable=broad-except
+                    print(
+                        f"Error fetching routes for {route_server} - {neighbour_id}: {exc}"
+                    )
 
         return list(set(origin_asn_list)) if origin_asn_list else None
 
