@@ -1,6 +1,8 @@
 # academie
 
-````
+A tool to generate Origin ASN summaries per country using IXP data.
+
+````bash
 » python3 datagen.py
 usage: datagen.py [-h] [-lg ALICE_URL] [-a]
 
@@ -10,6 +12,29 @@ options:
   -h, --help     show this help message and exit
   -lg ALICE_URL  Datagen - Generate Origin ASN summary per country.
   -a             Generate Origin ASN summary per country.for all IXPS @ datagen/config.yaml.
+````
+
+## Features
+
+The script provides functionality to:
+* Process data from ALICE-LG instances
+* Generate Origin ASN summaries per country
+* Batch process multiple IXPs concurrently using configuration from datagen/config.yaml
+
+## Configuration
+
+IXP configurations are stored in datagen/config.yaml. The -a flag will process all IXPs defined in this file.
+
+## Examples
+
+Process a single ALICE-LG instance:
+````bash
+python3 datagen.py -lg https://lg.example.com
+````
+
+Process all configured IXPs:
+````bash
+python3 datagen.py -a
 ````
 
 ### archive
