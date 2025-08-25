@@ -70,7 +70,7 @@ pytest==8.3.4
     # via datagen (pyproject.toml)
 pyyaml==6.0.2
     # via yamllint
-requests==2.32.3
+requests==2.32.4
     # via datagen (pyproject.toml)
 ruff==0.9.3
     # via datagen (pyproject.toml)
